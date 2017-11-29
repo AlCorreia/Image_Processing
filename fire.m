@@ -31,7 +31,7 @@ coloredObjectsMask = uint8(bwareaopen(coloredObjectsMask, smallestAcceptableArea
 % title(caption, 'FontSize', fontSize);
 
 % Smooth the border using a morphological closing operation, imclose().
-structuringElement = strel('disk', 4);
+structuringElement = strel('disk',4);
 coloredObjectsMask = imclose(coloredObjectsMask, structuringElement);
 % subplot(3, 3, 2);
 % imshow(coloredObjectsMask, []);
@@ -47,12 +47,12 @@ coloredObjectsMask = imfill(logical(coloredObjectsMask), 'holes');
 filtered_image = uint8(double(pic_gray).*double(coloredObjectsMask));
 sobel_mask = imcomplement(edge(filtered_image, 'sobel', 0.07));
 
-structuringElement = strel('disk', 9);
+structuringElement = strel('disk', 11);
 sobel_mask = imerode(sobel_mask, structuringElement);
 structuringElement = strel('disk', 4);
 sobel_mask = imdilate(sobel_mask, structuringElement);
 
-coloredObjectsMask = uint8(hueMask & saturationMask & valueMask & sobel_mask);
+coloredObjectsMask = uint8(coloredObjectsMask & sobel_mask);
 
 % Get rid of small objects.  Note: bwareaopen returns a logical.
 coloredObjectsMask = uint8(bwareaopen(coloredObjectsMask, smallestAcceptableArea));
