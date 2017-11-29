@@ -3,7 +3,7 @@ clear all
 sigma = 0.4;
 alpha = 0.5;
 
-pic = imread('banana.jpg');
+pic = imread('banana3.jpg');
 pic_gray = rgb2gray(pic);
 pic_hsv = rgb2hsv(pic);
 h_pic = pic_hsv(:,:,1);
@@ -14,7 +14,7 @@ hueThresholdLow = 0.10;
 hueThresholdHigh = 0.14;
 saturationThresholdLow = 0.4;
 saturationThresholdHigh = 1;
-valueThresholdLow = 0.8;
+valueThresholdLow = 0.7;
 valueThresholdHigh = 1.0;
 
 smallestAcceptableArea=500;
@@ -48,17 +48,44 @@ imshow(coloredObjectsMask, []);
 title('Regions Filled', 'FontSize', fontSize);
 
 filtered_image = uint8(double(pic_gray).*double(coloredObjectsMask));
+out_border = edge(coloredObjectsMask, 'sobel');
 filtered_image = localcontrast(filtered_image);
 subplot(3, 3, 4);
 imshow(filtered_image, []);
 
-sobel_mask = imcomplement(edge(filtered_image, 'sobel', 0.07));
+sobel_mask = (edge(filtered_image, 'sobel', 0.08));
+
 subplot(3, 3, 5);
 imshow(sobel_mask, []);
-
 subplot(3, 3, 6);
-imshow(coloredObjectsMask, []);
-title('Applied Sobel', 'FontSize', fontSize);
+%sobel_mask_n = bwmorph(sobel_mask,'majority');
+[labeledImage, numberOfBlobs] = bwlabel(sobel_mask, 8); 
+blobMeasurements = regionprops(labeledImage, filtered_image);%, 'area', 'MeanIntensity');
+%areas = [blobMeasurements.Area]';
+%a = find(areas<8)
+delete = labeledImage*0;
+for i =1:numel(blobMeasurements)
+    square = blobMeasurements(i).BoundingBox;
+    ratio = blobMeasurements(i).Area/(square(3)*square(4));
+    max_dim = max(square(3:4));
+    min_dim = min(square(3:4));
+    cte=5;
+    if max_dim<=4 || (ratio<(1/min_dim)*cte&& ratio>(1-1/min_dim)/cte) %0.2 0.8
+    delete = delete+(labeledImage==i);
+    end
+end
+
+sobel_mask = max(sobel_mask-delete,0);
+sobel_mask = imcomplement(min(sobel_mask+out_border,1));
+
+
+
+
+imshow(delete)
+title('Pixels to delete')
+
+%sobel_mask = imdilate(sobel_mask, structuringElement);
+%sobel_mask = imerode(sobel_mask, structuringElement);
 
 coloredObjectsMask = uint8(coloredObjectsMask & sobel_mask);
 
