@@ -1,5 +1,8 @@
 clear all
 
+sigma = 0.4;
+alpha = 0.5;
+
 pic = imread('banana.jpg');
 pic_gray = rgb2gray(pic);
 pic_hsv = rgb2hsv(pic);
@@ -11,7 +14,7 @@ hueThresholdLow = 0.10;
 hueThresholdHigh = 0.14;
 saturationThresholdLow = 0.4;
 saturationThresholdHigh = 1;
-valueThresholdLow = 0.7;
+valueThresholdLow = 0.8;
 valueThresholdHigh = 1.0;
 
 smallestAcceptableArea=500;
@@ -24,61 +27,52 @@ coloredObjectsMask = uint8(hueMask & saturationMask & valueMask);
 
 % Get rid of small objects.  Note: bwareaopen returns a logical.
 coloredObjectsMask = uint8(bwareaopen(coloredObjectsMask, smallestAcceptableArea));
-% subplot(3, 3, 1);
-% imshow(coloredObjectsMask, []);
-% fontSize = 13;
-% caption = sprintf('bwareaopen() removed objects\nsmaller than %d pixels', smallestAcceptableArea);
-% title(caption, 'FontSize', fontSize);
+subplot(3, 3, 1);
+imshow(coloredObjectsMask, []);
+fontSize = 13;
+caption = sprintf('bwareaopen() removed objects\nsmaller than %d pixels', smallestAcceptableArea);
+title(caption, 'FontSize', fontSize);
 
 % Smooth the border using a morphological closing operation, imclose().
-structuringElement = strel('disk',4);
+structuringElement = strel('disk', 11);
 coloredObjectsMask = imclose(coloredObjectsMask, structuringElement);
-% subplot(3, 3, 2);
-% imshow(coloredObjectsMask, []);
-% fontSize = 16;
-% title('Border smoothed', 'FontSize', fontSize);
+subplot(3, 3, 2);
+imshow(coloredObjectsMask, []);
+fontSize = 16;
+title('Border smoothed', 'FontSize', fontSize);
 
 % Fill in any holes in the regions, since they are most likely red also.
 coloredObjectsMask = imfill(logical(coloredObjectsMask), 'holes');
-% subplot(3, 3, 3);
-% % imshow(coloredObjectsMask, []);
-% title('Regions Filled', 'FontSize', fontSize);
+subplot(3, 3, 3);
+imshow(coloredObjectsMask, []);
+title('Regions Filled', 'FontSize', fontSize);
 
 filtered_image = uint8(double(pic_gray).*double(coloredObjectsMask));
+filtered_image = localcontrast(filtered_image);
+subplot(3, 3, 4);
+imshow(filtered_image, []);
+
 sobel_mask = imcomplement(edge(filtered_image, 'sobel', 0.07));
+subplot(3, 3, 5);
+imshow(sobel_mask, []);
 
-structuringElement = strel('disk', 11);
-sobel_mask = imerode(sobel_mask, structuringElement);
-structuringElement = strel('disk', 4);
-sobel_mask = imdilate(sobel_mask, structuringElement);
+subplot(3, 3, 6);
+imshow(coloredObjectsMask, []);
+title('Applied Sobel', 'FontSize', fontSize);
 
 coloredObjectsMask = uint8(coloredObjectsMask & sobel_mask);
 
-% Get rid of small objects.  Note: bwareaopen returns a logical.
-coloredObjectsMask = uint8(bwareaopen(coloredObjectsMask, smallestAcceptableArea));
-% subplot(3, 3, 1);
-% imshow(coloredObjectsMask, []);
-% fontSize = 13;
-% caption = sprintf('bwareaopen() removed objects\nsmaller than %d pixels', smallestAcceptableArea);
-% title(caption, 'FontSize', fontSize);
+structuringElement = strel('disk', 5);
+coloredObjectsMask = imerode(coloredObjectsMask, structuringElement);
+subplot(3, 3, 7);
+imshow(coloredObjectsMask, []);
+title('Erode', 'FontSize', fontSize);
 
-% Smooth the border using a morphological closing operation, imclose().
 structuringElement = strel('disk', 2);
-coloredObjectsMask = imclose(coloredObjectsMask, structuringElement);
-% subplot(3, 3, 2);
-% imshow(coloredObjectsMask, []);
-% fontSize = 16;
-% title('Border smoothed', 'FontSize', fontSize);
-
-% Fill in any holes in the regions, since they are most likely red also.
-coloredObjectsMask = imfill(logical(coloredObjectsMask), 'holes');
-% subplot(3, 3, 3);
-% % imshow(coloredObjectsMask, []);
-% title('Regions Filled', 'FontSize', fontSize);
-
-
-coloredObjectsMask = uint8(coloredObjectsMask & sobel_mask);
-
+coloredObjectsMask = imdilate(coloredObjectsMask, structuringElement);
+subplot(3, 3, 8);
+imshow(coloredObjectsMask, []);
+title('Dilate', 'FontSize', fontSize);
 
 [meanHSV, areas, numberOfBlobs] = MeasureBlobs(coloredObjectsMask, h_pic, s_pic, v_pic);
 
@@ -86,7 +80,8 @@ function [meanHSV, areas, numberOfBlobs] = MeasureBlobs(maskImage, hImage, sImag
 try
 	[labeledImage, numberOfBlobs] = bwlabel(maskImage, 8);     % Label each blob so we can make measurements of it
     coloredLabels = label2rgb(labeledImage, 'hsv', 'k', 'shuffle');
-    imshow(coloredLabels);
+    subplot(3, 3, 9);
+    imshow(coloredLabels, []);
 	if numberOfBlobs == 0
 		% Didn't detect any blobs of the specified color in this image.
 		meanHSV = [0 0 0];
