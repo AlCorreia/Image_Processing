@@ -2,11 +2,11 @@ clear all
 fontSize = 13;
 
 % Read the image file as RGB
-pic = imread('banana18.jpg');
+pic = imread('F2.jpg');
 % Calculate the number of pixels to correct erode and dilation kernel sizes
 [num_pixels_1, num_pixels_2, xxx] = size(pic);
-num_pixels = num_pixels_1 * num_pixels_2;
-coeff = round(log(num_pixels/250000) + 1);
+num_pixels = (num_pixels_1 * num_pixels_2);
+coeff = sqrt(num_pixels/250000);
 
 % Convert the image to hsv
 pic_gray = rgb2gray(pic);
@@ -28,7 +28,7 @@ valueThresholdHigh = 1.0;
 
 % Define the size of the smallest acceptable area. 
 % Smaller areas will be removed.
-smallestAcceptableArea=1000*coeff;
+smallestAcceptableArea=round(1000*coeff);
 
 % Define a mask for each hsv component with the thresholds.
 hueMask = (h_pic >= hueThresholdLow) & (h_pic <= hueThresholdHigh);
@@ -45,7 +45,7 @@ caption = sprintf('Removed objects than %d pixels', smallestAcceptableArea);
 title(caption, 'FontSize', fontSize);
 
 % Close holes with imclose() to obtain a smoother image.
-structuringElement = strel('disk', 11+coeff);
+structuringElement = strel('disk', round(11*coeff));
 coloredObjectsMask = imclose(coloredObjectsMask, structuringElement);
 subplot(3, 3, 2);
 imshow(coloredObjectsMask, []);
@@ -97,13 +97,13 @@ title('Pixels to delete')
 
 coloredObjectsMask = uint8(coloredObjectsMask & sobel_mask);
 
-structuringElement = strel('disk', 11+coeff);
+structuringElement = strel('disk', round(11*coeff));
 coloredObjectsMask = imerode(coloredObjectsMask, structuringElement);
 subplot(3, 3, 7);
 imshow(coloredObjectsMask, []);
 title('Erode', 'FontSize', fontSize);
 
-structuringElement = strel('disk', 5+coeff);
+structuringElement = strel('disk', round(5*coeff));
 coloredObjectsMask = imdilate(coloredObjectsMask, structuringElement);
 subplot(3, 3, 8);
 imshow(coloredObjectsMask, []);
@@ -152,7 +152,7 @@ try
 %     end
     matrizref = 0*labeledImage;
     for i=1:numberOfBlobs
-        structuringElement = strel('disk', 21+coeff);
+        structuringElement = strel('disk', round(21*coeff));
         matrizref = matrizref + imclose(labeledImage==i, structuringElement);
     end
     
