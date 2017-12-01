@@ -2,7 +2,7 @@ clear all
 fontSize = 9;
 
 % Read the image file as RGB
-pic = imread('banana13.jpg');
+pic = imread('images/banana13.jpg');
 % Calculate the number of pixels to correct erode and dilation kernel sizes
 [num_pixels_1, num_pixels_2, xxx] = size(pic);
 num_pixels = (num_pixels_1 * num_pixels_2);
