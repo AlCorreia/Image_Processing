@@ -1,7 +1,7 @@
 # Image Processing
 ## Detection of bananas based on color and edges
 
-This small project detect was designed to detect bananas in an image using primarily its color.
+This small project was designed to detect bananas in an image using primarily its color.
 Naturally, the techniques are readilly adaptable to other fruits/colors.
 
 The project was developed in Matlab with the Image Processing toolbox.
